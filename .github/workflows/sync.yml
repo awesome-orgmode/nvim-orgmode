@@ -1,0 +1,24 @@
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+
+concurrency: sync
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mirror nvim-orgmode/orgmode
+        env:
+          # PAT with repo + workflow scopes (upstream contains workflow files)
+          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+        run: |
+          set -euo pipefail
+          git clone --bare https://github.com/nvim-orgmode/orgmode.git upstream.git
+          cd upstream.git
+          git push --force \
+            "https://x-access-token:${MIRROR_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
